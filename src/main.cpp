@@ -1,68 +1,134 @@
 #include <SFML/Graphics.hpp>
+#include <dirent.h>
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/System/Vector2.hpp>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
-void read_file();
+std::array<uint, 2> handleWindowProps(std::istringstream &iss)
+{
+  std::array<uint, 2> window;
+  int index_line = 0;
+  for (std::string word; iss >> word;)
+  {
+    window[index_line] = std::stoi(word);
+    index_line++;
+  }
+  return window;
+}
 
-int main() {
-  read_file();
-  auto window = sf::RenderWindow{{1280u, 720u}, "CMake SFML Project"};
+std::array<float, 9> handleCircleProps(std::istringstream &iss)
+{
+  std::array<float, 9> window;
+  std::size_t index = 0;
+  for (std::string word; iss >> word;)
+  {
+    if (index > 0)
+    {
+      window[index] = std::stof(word);
+    }
 
-  window.setFramerateLimit(60);
-  sf::RectangleShape rect(sf::Vector2f(30.f, 30.f));
-  rect.setFillColor(sf::Color::Yellow);
+    index++;
+  }
+  return window;
+}
 
-  sf::CircleShape circle(100.f);
-  circle.setFillColor(sf::Color::Magenta);
+std::array<float, 10> handleRectangleProps(std::istringstream &iss)
+{
+  std::array<float, 10> window;
+  std::size_t index = 0;
+  for (std::string word; iss >> word;)
+  {
+    if (index > 0)
+    {
+      window[index] = std::stof(word);
+    }
 
-  float speed = 5.0f;
-  float rect_speed = 5.0f;
-  while (window.isOpen()) {
-    for (auto event = sf::Event{}; window.pollEvent(event);) {
-      if (event.type == sf::Event::Closed) {
+    index++;
+  }
+  return window;
+}
+
+int main()
+{
+  std::vector<sf::CircleShape> circle_shapes;
+  std::vector<std::array<float, 2>> circle_shapes_speeds;
+  std::vector<sf::RectangleShape> rectangle_shapes;
+  std::vector<std::array<float, 2>> rectangle_shapes_speeds;
+  uint window_width, window_height = 0;
+  std::ifstream file("../../src/config.txt");
+
+  if (file.is_open())
+  {
+    std::string line;
+    while (std::getline(file, line))
+    {
+      std::istringstream iss(line);
+      std::string word;
+      iss >> word;
+      if (word == "Window")
+      {
+        auto window_props = handleWindowProps(iss);
+        window_width = window_props[0];
+        window_height = window_props[1];
+      }
+      if (word == "Circle")
+      {
+        auto circle_props = handleCircleProps(iss);
+        sf::CircleShape circle(circle_props[8]);
+        circle.setPosition(circle_props[1], circle_props[2]);
+        circle.setFillColor(
+            sf::Color(circle_props[5], circle_props[6], circle_props[7]));
+        circle_shapes_speeds.push_back({circle_props[3], circle_props[4]});
+        circle_shapes.push_back(circle);
+      }
+      if (word == "Rectangle")
+      {
+        auto rectangle_props = handleRectangleProps(iss);
+        sf::RectangleShape rectangle(sf::Vector2f(rectangle_props[8], rectangle_props[9]));
+        rectangle.setPosition(rectangle_props[1], rectangle_props[2]);
+        rectangle.setFillColor(
+            sf::Color(rectangle_props[5], rectangle_props[6], rectangle_props[7]));
+        rectangle_shapes_speeds.push_back({rectangle_props[3], rectangle_props[4]});
+        rectangle_shapes.push_back(rectangle);
+      }
+    }
+  }
+  file.close();
+
+  auto window =
+      sf::RenderWindow{{window_width, window_height}, "First Assignment"};
+
+  while (window.isOpen())
+  {
+    for (auto event = sf::Event{}; window.pollEvent(event);)
+    {
+      if (event.type == sf::Event::Closed)
+      {
         window.close();
       }
     }
 
-    circle.move(speed, speed);
-    rect.move(0, rect_speed);
     window.clear();
-    if (circle.getPosition().y + 200 == 720 || circle.getPosition().y == 0) {
-      speed = -speed;
-      // std::cout << "Collision" << std::endl;
+
+    std::size_t index = 0;
+    for (auto &shape : circle_shapes)
+    {
+      window.draw(shape);
+      shape.move(circle_shapes_speeds[index][0], circle_shapes_speeds[index][1]);
+      index++;
     }
-    if (rect.getPosition().y + 30 == 720 || rect.getPosition().y == 0) {
-      rect_speed = -rect_speed;
-      // std::cout << "Collision" << std::endl;
+    index = 0;
+    for (auto &shape : rectangle_shapes)
+    {
+      window.draw(shape);
+      shape.move(rectangle_shapes_speeds[index][0], rectangle_shapes_speeds[index][1]);
+      index++;
     }
 
-    // rect.move(speed, speed);
-    window.draw(rect);
-    window.draw(circle);
     window.display();
-  }
-}
-
-void show_files() {
-  std::string path = ".";
-  for (const auto &entry : std::filesystem::directory_iterator(path))
-    std::cout << entry.path() << std::endl;
-}
-
-void read_file() {
-  show_files();
-  std::string text;
-  std::ifstream MyFile("./src/config.txt");
-  if (MyFile.is_open()) {
-    std::cout << "File opened" << std::endl;
-    while (getline(MyFile, text)) {
-      std::cout << text << std::endl;
-    }
-    MyFile.close();
   }
 }
