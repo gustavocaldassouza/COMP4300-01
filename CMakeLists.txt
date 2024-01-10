@@ -10,6 +10,9 @@ FetchContent_Declare(SFML
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
 
+configure_file(${CMAKE_SOURCE_DIR}/src/config.txt ${CMAKE_BINARY_DIR}/config.txt COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/src/fonts/Roboto-Regular.ttf ${CMAKE_BINARY_DIR}/fonts/Roboto-Regular.ttf COPYONLY)
+
 add_executable(CMakeSFMLProject src/main.cpp)
 target_link_libraries(CMakeSFMLProject PRIVATE sfml-graphics)
 target_compile_features(CMakeSFMLProject PRIVATE cxx_std_17)
