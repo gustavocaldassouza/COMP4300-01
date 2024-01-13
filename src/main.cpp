@@ -97,35 +97,59 @@ void handleRectangleProps(std::istringstream &iss, sf::Font &font, uint &font_si
   textShapes.push_back(text);
 }
 
-void drawCircles(std::vector<sf::CircleShape> &shapes, const std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
+void drawCircles(std::vector<sf::CircleShape> &shapes, std::vector<std::array<float, 2>> &speeds, std::vector<std::array<float, 2>> &textSpeedShapes, sf::RenderWindow &window, std::size_t &indexTextArr)
 {
   std::size_t index = 0;
   for (auto &shape : shapes)
   {
-    window.draw(shape);
     shape.move(speeds[index][0], speeds[index][1]);
+
+    if (shape.getPosition().x <= 0 || (shape.getPosition().x + (shape.getRadius() * 2)) >= window.getSize().x)
+    {
+      speeds[index][0] = -speeds[index][0];
+      textSpeedShapes[index + indexTextArr][0] = -textSpeedShapes[index + indexTextArr][0];
+    }
+    if (shape.getPosition().y <= 0 || (shape.getPosition().y + (shape.getRadius() * 2)) > window.getSize().y)
+    {
+      speeds[index][1] = -speeds[index][1];
+      textSpeedShapes[index + indexTextArr][1] = -textSpeedShapes[index + indexTextArr][1];
+    }
+
+    window.draw(shape);
     index++;
   }
 }
 
-void drawRectangles(std::vector<sf::RectangleShape> &shapes, const std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
+void drawRectangles(std::vector<sf::RectangleShape> &shapes, std::vector<std::array<float, 2>> &speeds, std::vector<std::array<float, 2>> &textSpeedShapes, sf::RenderWindow &window, std::size_t &indexTextArr)
 {
   std::size_t index = 0;
   for (auto &shape : shapes)
   {
-    window.draw(shape);
     shape.move(speeds[index][0], speeds[index][1]);
+
+    if (shape.getPosition().x <= 0 || (shape.getPosition().x + shape.getSize().x) >= window.getSize().x)
+    {
+      speeds[index][0] = -speeds[index][0];
+      textSpeedShapes[index + indexTextArr][0] = -textSpeedShapes[index + indexTextArr][0];
+    }
+    if (shape.getPosition().y <= 0 || (shape.getPosition().y + shape.getSize().y) > window.getSize().y)
+    {
+      speeds[index][1] = -speeds[index][1];
+      textSpeedShapes[index + indexTextArr][1] = -textSpeedShapes[index + indexTextArr][1];
+    }
+
+    window.draw(shape);
     index++;
   }
 }
 
-void drawTexts(std::vector<sf::Text> &shapes, const std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
+void drawTexts(std::vector<sf::Text> &shapes, std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
 {
   std::size_t index = 0;
   for (auto &shape : shapes)
   {
-    window.draw(shape);
     shape.move(speeds[index][0], speeds[index][1]);
+    window.draw(shape);
     index++;
   }
 }
@@ -176,7 +200,8 @@ int main()
 
   auto window =
       sf::RenderWindow{{window_width, window_height}, "First Assignment"};
-  window.setFramerateLimit(60);
+
+  window.setFramerateLimit(244);
 
   while (window.isOpen())
   {
@@ -190,8 +215,10 @@ int main()
 
     window.clear();
 
-    drawCircles(circle_shapes, circle_shapes_speeds, window);
-    drawRectangles(rectangle_shapes, rectangle_shapes_speeds, window);
+    std::size_t index = 0;
+    drawCircles(circle_shapes, circle_shapes_speeds, text_shapes_speeds, window, index);
+    index = index + circle_shapes.size();
+    drawRectangles(rectangle_shapes, rectangle_shapes_speeds, text_shapes_speeds, window, index);
     drawTexts(text_shapes, text_shapes_speeds, window);
 
     window.display();
