@@ -8,52 +8,126 @@
 #include <sstream>
 #include <string>
 
-std::array<uint, 2> handleWindowProps(std::istringstream &iss)
+void handleWindowProps(std::istringstream &iss, uint &windowWidth, uint &windowHeight)
 {
-  std::array<uint, 2> window;
+  std::array<uint, 2> windowProps;
+  int index_line = 0;
+
+  for (std::string word; iss >> word;)
+  {
+    windowProps[index_line] = std::stoi(word);
+    index_line++;
+  }
+
+  windowWidth = windowProps[0];
+  windowHeight = windowProps[1];
+}
+
+void handleFontProps(std::istringstream &iss, sf::Font &font, uint &font_size, sf::Color &font_color)
+{
+  std::array<std::string, 5> fontProps;
   int index_line = 0;
   for (std::string word; iss >> word;)
   {
-    window[index_line] = std::stoi(word);
+    fontProps[index_line] = word;
     index_line++;
   }
-  return window;
+
+  std::string path = "../" + fontProps[0];
+  font.loadFromFile(path);
+  font_size = std::stoi(fontProps[1]);
+  font_color = sf::Color(std::stoi(fontProps[2]), std::stoi(fontProps[3]), std::stoi(fontProps[4]));
 }
 
-std::array<std::string, 5> handleFontProps(std::istringstream &iss)
+void handleCircleProps(std::istringstream &iss, sf::Font &font, uint &font_size, sf::Color &font_color, std::vector<sf::CircleShape> &circleShapes, std::vector<std::array<float, 2>> &circleShapesSpeeds, std::vector<sf::Text> &textShapes, std::vector<std::array<float, 2>> &textShapesSpeeds)
 {
-  std::array<std::string, 5> window;
-  int index_line = 0;
-  for (std::string word; iss >> word;)
-  {
-    window[index_line] = word;
-    index_line++;
-  }
-  return window;
-}
-
-std::array<std::string, 9> handleCircleProps(std::istringstream &iss)
-{
-  std::array<std::string, 9> window;
+  std::array<std::string, 9> circleProps;
   std::size_t index = 0;
   for (std::string word; iss >> word;)
   {
-    window[index] = word;
+    circleProps[index] = word;
     index++;
   }
-  return window;
+
+  sf::CircleShape circle(std::stof(circleProps[8]));
+  circle.setPosition(std::stof(circleProps[1]), std::stof(circleProps[2]));
+  circle.setFillColor(
+      sf::Color(std::stoi(circleProps[5]), std::stoi(circleProps[6]), std::stoi(circleProps[7])));
+
+  circleShapesSpeeds.push_back({std::stof(circleProps[3]), std::stof(circleProps[4])});
+  circleShapes.push_back(circle);
+
+  sf::Text text(circleProps[0], font, font_size);
+  sf::FloatRect text_bounds = text.getLocalBounds();
+  float x = std::stof(circleProps[1]) + (std::stof(circleProps[8])) - text_bounds.width / 2;
+  float y = std::stof(circleProps[2]) + (std::stof(circleProps[8])) - text_bounds.height;
+  text.setPosition(x, y);
+  text.setFillColor(font_color);
+
+  textShapesSpeeds.push_back({std::stof(circleProps[3]), std::stof(circleProps[4])});
+  textShapes.push_back(text);
 }
 
-std::array<std::string, 10> handleRectangleProps(std::istringstream &iss)
+void handleRectangleProps(std::istringstream &iss, sf::Font &font, uint &font_size, sf::Color &font_color, std::vector<sf::RectangleShape> &rectangleShapes, std::vector<std::array<float, 2>> &rectangleShapesSpeeds, std::vector<sf::Text> &textShapes, std::vector<std::array<float, 2>> &textShapesSpeeds)
 {
-  std::array<std::string, 10> window;
+  std::array<std::string, 10> rectangleProps;
   std::size_t index = 0;
   for (std::string word; iss >> word;)
   {
-    window[index] = word;
+    rectangleProps[index] = word;
     index++;
   }
-  return window;
+
+  sf::RectangleShape rectangle(sf::Vector2f(std::stof(rectangleProps[8]), std::stof(rectangleProps[9])));
+  rectangle.setPosition(std::stof(rectangleProps[1]), std::stof(rectangleProps[2]));
+  rectangle.setFillColor(
+      sf::Color(std::stoi(rectangleProps[5]), std::stoi(rectangleProps[6]), std::stoi(rectangleProps[7])));
+
+  rectangleShapesSpeeds.push_back({std::stof(rectangleProps[3]), std::stof(rectangleProps[4])});
+  rectangleShapes.push_back(rectangle);
+
+  sf::Text text(rectangleProps[0], font, font_size);
+  sf::FloatRect text_bounds = text.getLocalBounds();
+  float x = std::stof(rectangleProps[1]) + (std::stof(rectangleProps[8]) / 2) - text_bounds.width / 2;
+  float y = std::stof(rectangleProps[2]) + (std::stof(rectangleProps[9]) / 2) - text_bounds.height;
+  text.setPosition(x, y);
+  text.setFillColor(font_color);
+
+  textShapesSpeeds.push_back({std::stof(rectangleProps[3]), std::stof(rectangleProps[4])});
+  textShapes.push_back(text);
+}
+
+void drawCircles(std::vector<sf::CircleShape> &shapes, const std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
+{
+  std::size_t index = 0;
+  for (auto &shape : shapes)
+  {
+    window.draw(shape);
+    shape.move(speeds[index][0], speeds[index][1]);
+    index++;
+  }
+}
+
+void drawRectangles(std::vector<sf::RectangleShape> &shapes, const std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
+{
+  std::size_t index = 0;
+  for (auto &shape : shapes)
+  {
+    window.draw(shape);
+    shape.move(speeds[index][0], speeds[index][1]);
+    index++;
+  }
+}
+
+void drawTexts(std::vector<sf::Text> &shapes, const std::vector<std::array<float, 2>> &speeds, sf::RenderWindow &window)
+{
+  std::size_t index = 0;
+  for (auto &shape : shapes)
+  {
+    window.draw(shape);
+    shape.move(speeds[index][0], speeds[index][1]);
+    index++;
+  }
 }
 
 int main()
@@ -82,60 +156,19 @@ int main()
       iss >> word;
       if (word == "Window")
       {
-        auto window_props = handleWindowProps(iss);
-        window_width = window_props[0];
-        window_height = window_props[1];
+        handleWindowProps(iss, window_width, window_height);
       }
       if (word == "Font")
       {
-        auto font_props = handleFontProps(iss);
-        std::string path = "../" + font_props[0];
-        font.loadFromFile(path);
-        font_size = std::stoi(font_props[1]);
-        font_color = sf::Color(std::stoi(font_props[2]), std::stoi(font_props[3]), std::stoi(font_props[4]));
+        handleFontProps(iss, font, font_size, font_color);
       }
       if (word == "Circle")
       {
-        auto circle_props = handleCircleProps(iss);
-
-        sf::CircleShape circle(std::stof(circle_props[8]));
-        circle.setPosition(std::stof(circle_props[1]), std::stof(circle_props[2]));
-        circle.setFillColor(
-            sf::Color(std::stoi(circle_props[5]), std::stoi(circle_props[6]), std::stoi(circle_props[7])));
-
-        circle_shapes_speeds.push_back({std::stof(circle_props[3]), std::stof(circle_props[4])});
-        circle_shapes.push_back(circle);
-
-        sf::Text text(circle_props[0], font, font_size);
-        sf::FloatRect text_bounds = text.getLocalBounds();
-        float x = std::stof(circle_props[1]) + (std::stof(circle_props[8])) - text_bounds.width / 2;
-        float y = std::stof(circle_props[2]) + (std::stof(circle_props[8])) - text_bounds.height;
-        text.setPosition(x, y);
-        text.setFillColor(font_color);
-
-        text_shapes_speeds.push_back({std::stof(circle_props[3]), std::stof(circle_props[4])});
-        text_shapes.push_back(text);
+        handleCircleProps(iss, font, font_size, font_color, circle_shapes, circle_shapes_speeds, text_shapes, text_shapes_speeds);
       }
       if (word == "Rectangle")
       {
-        auto rectangle_props = handleRectangleProps(iss);
-        sf::RectangleShape rectangle(sf::Vector2f(std::stof(rectangle_props[8]), std::stof(rectangle_props[9])));
-        rectangle.setPosition(std::stof(rectangle_props[1]), std::stof(rectangle_props[2]));
-        rectangle.setFillColor(
-            sf::Color(std::stoi(rectangle_props[5]), std::stoi(rectangle_props[6]), std::stoi(rectangle_props[7])));
-
-        rectangle_shapes_speeds.push_back({std::stof(rectangle_props[3]), std::stof(rectangle_props[4])});
-        rectangle_shapes.push_back(rectangle);
-
-        sf::Text text(rectangle_props[0], font, font_size);
-        sf::FloatRect text_bounds = text.getLocalBounds();
-        float x = std::stof(rectangle_props[1]) + (std::stof(rectangle_props[8]) / 2) - text_bounds.width / 2;
-        float y = std::stof(rectangle_props[2]) + (std::stof(rectangle_props[9]) / 2) - text_bounds.height;
-        text.setPosition(x, y);
-        text.setFillColor(font_color);
-
-        text_shapes_speeds.push_back({std::stof(rectangle_props[3]), std::stof(rectangle_props[4])});
-        text_shapes.push_back(text);
+        handleRectangleProps(iss, font, font_size, font_color, rectangle_shapes, rectangle_shapes_speeds, text_shapes, text_shapes_speeds);
       }
     }
   }
@@ -157,27 +190,9 @@ int main()
 
     window.clear();
 
-    std::size_t index = 0;
-    for (auto &shape : circle_shapes)
-    {
-      window.draw(shape);
-      shape.move(circle_shapes_speeds[index][0], circle_shapes_speeds[index][1]);
-      index++;
-    }
-    index = 0;
-    for (auto &shape : rectangle_shapes)
-    {
-      window.draw(shape);
-      shape.move(rectangle_shapes_speeds[index][0], rectangle_shapes_speeds[index][1]);
-      index++;
-    }
-    index = 0;
-    for (auto &shape : text_shapes)
-    {
-      window.draw(shape);
-      shape.move(text_shapes_speeds[index][0], text_shapes_speeds[index][1]);
-      index++;
-    }
+    drawCircles(circle_shapes, circle_shapes_speeds, window);
+    drawRectangles(rectangle_shapes, rectangle_shapes_speeds, window);
+    drawTexts(text_shapes, text_shapes_speeds, window);
 
     window.display();
   }
