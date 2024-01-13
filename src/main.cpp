@@ -102,12 +102,14 @@ int main()
         circle.setPosition(std::stof(circle_props[1]), std::stof(circle_props[2]));
         circle.setFillColor(
             sf::Color(std::stoi(circle_props[5]), std::stoi(circle_props[6]), std::stoi(circle_props[7])));
+
         circle_shapes_speeds.push_back({std::stof(circle_props[3]), std::stof(circle_props[4])});
         circle_shapes.push_back(circle);
 
         sf::Text text(circle_props[0], font, font_size);
-        float x = std::stof(circle_props[1]); //+ (std::stof(rectangle_props[8]) / 2) - text.getCharacterSize();
-        float y = std::stof(circle_props[2]); // + (std::stof(rectangle_props[9]) / 2) - text.getCharacterSize();
+        sf::FloatRect text_bounds = text.getLocalBounds();
+        float x = std::stof(circle_props[1]) + (std::stof(circle_props[8])) - text_bounds.width / 2;
+        float y = std::stof(circle_props[2]) + (std::stof(circle_props[8])) - text_bounds.height;
         text.setPosition(x, y);
         text.setFillColor(font_color);
 
@@ -126,8 +128,9 @@ int main()
         rectangle_shapes.push_back(rectangle);
 
         sf::Text text(rectangle_props[0], font, font_size);
-        float x = std::stof(rectangle_props[1]); //+ (std::stof(rectangle_props[8]) / 2) - text.getCharacterSize();
-        float y = std::stof(rectangle_props[2]); // + (std::stof(rectangle_props[9]) / 2) - text.getCharacterSize();
+        sf::FloatRect text_bounds = text.getLocalBounds();
+        float x = std::stof(rectangle_props[1]) + (std::stof(rectangle_props[8]) / 2) - text_bounds.width / 2;
+        float y = std::stof(rectangle_props[2]) + (std::stof(rectangle_props[9]) / 2) - text_bounds.height;
         text.setPosition(x, y);
         text.setFillColor(font_color);
 
